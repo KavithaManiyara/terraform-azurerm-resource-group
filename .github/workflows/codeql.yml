@@ -1,33 +1,30 @@
-name: CodeQL Analysis
+name: "CodeQL IaC"
 
 on:
   push:
-    branches:
-      - main
+    branches: ["main"]
   pull_request:
-    branches:
-      - main
+    branches: ["main"]
+  workflow_dispatch:
 
 jobs:
   analyze:
-    runs-on: ubuntu-latest
+    name: Analyze
+    runs-on: "ubuntu-latest"
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v1
-      
-      - name: Install Terraform
-        uses: hashicorp/setup-terraform@v1
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize and Analyze IaC
+        id: codeql_iac
+        uses: advanced-security/codeql-extractor-iac@main
+
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v2
         with:
-          terraform_version: 1.0.0
-      
-      - name: Terraform Init
-        run: terraform init
-      
-      - name: Terraform Plan
-        run: terraform plan
-      
-      - name: Run CodeQL Analysis
-        uses: github/codeql-action/analyze@v1
+          sarif_file: ${{ steps.codeql_iac.outputs.sarif }}
